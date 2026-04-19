@@ -1,0 +1,79 @@
+services:
+  assistant.web:
+    image: assistant.web
+    build:
+      context: .
+      dockerfile: src/Assistant.Web/Dockerfile
+    depends_on:
+      llm:
+        condition: service_healthy
+    environment:
+      - OLLAMA_BASE_URL=http://llm:11434
+    ports:
+      - "8080:8080"
+
+  llm:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    gpus: all
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+
+  llm-init:
+    image: ollama/ollama:latest
+    depends_on:
+      llm:
+        condition: service_healthy
+    environment:
+      - OLLAMA_HOST=http://llm:11434
+    command: ["pull", "llama3.1:8b"]
+    restart: "no"
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    depends_on:
+      llm:
+        condition: service_healthy
+    environment:
+      - OLLAMA_BASE_URL=http://llm:11434
+      - OFFLINE_MODE=true
+      - HF_HUB_OFFLINE=1
+      - RAG_EMBEDDING_MODEL_AUTO_UPDATE=false
+      - RAG_RERANKING_MODEL_AUTO_UPDATE=false
+      - WHISPER_MODEL_AUTO_UPDATE=false
+    ports:
+      - "3000:8080"
+    volumes:
+      - open_webui_data:/app/backend/data
+
+  llm-seq:
+    image: datalust/seq:latest
+    container_name: llm-seq
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINUSERNAME=${SEQ_ADMIN_USERNAME:-admin}
+      - SEQ_FIRSTRUN_ADMINPASSWORD=${SEQ_ADMIN_PASSWORD:-12345}
+    ports:
+      - "8081:80"
+      - "5341:5341"
+    volumes:
+      - seq_data:/data
+
+volumes:
+  ollama_data:
+  open_webui_data:
+  seq_data:
