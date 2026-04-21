@@ -1,4 +1,5 @@
 using Assistant.Web.Application.Abstractions;
+using Assistant.Web.Application.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Assistant.Web.Application.Services;
@@ -28,7 +29,7 @@ public sealed class LLMChatService
     }
 
     /// <summary>
-    /// Отправляет сообщение в LLM и возвращает ответ.
+    /// Отправляет сообщение в LLM и возвращает текстовый ответ.
     /// </summary>
     /// <param name="model">Имя модели. Если не передано, используется модель по умолчанию.</param>
     /// <param name="message">Сообщение пользователя.</param>
@@ -39,7 +40,7 @@ public sealed class LLMChatService
         var selectedModel = string.IsNullOrWhiteSpace(model) ? DefaultModel : model.Trim();
 
         _logger.LogInformation(
-            "Начата обработка запроса к LLM в сервисе. Модель: {Model}, длина сообщения: {MessageLength}.",
+            "Начата обработка текстового запроса к LLM. Модель: {Model}, длина сообщения: {MessageLength}.",
             selectedModel,
             message.Length);
 
@@ -48,9 +49,38 @@ public sealed class LLMChatService
             .ConfigureAwait(false);
 
         _logger.LogInformation(
-            "Запрос к LLM в сервисе успешно обработан. Модель: {Model}, длина ответа: {ResponseLength}.",
+            "Текстовый запрос к LLM успешно обработан. Модель: {Model}, длина ответа: {ResponseLength}.",
             selectedModel,
             response.Length);
+
+        return response;
+    }
+
+    /// <summary>
+    /// Выполняет структурированную PKI-классификацию запроса.
+    /// </summary>
+    /// <param name="model">Имя модели. Если не передано, используется модель по умолчанию.</param>
+    /// <param name="message">Сообщение пользователя.</param>
+    /// <param name="cancellationToken">Токен отмены операции.</param>
+    /// <returns>Структурированный результат классификации.</returns>
+    public async Task<PkiIntentResult> ClassifyPkiIntentAsync(string? model, string message, CancellationToken cancellationToken = default)
+    {
+        var selectedModel = string.IsNullOrWhiteSpace(model) ? DefaultModel : model.Trim();
+
+        _logger.LogInformation(
+            "Начата PKI-классификация запроса. Модель: {Model}, длина сообщения: {MessageLength}.",
+            selectedModel,
+            message.Length);
+
+        var response = await _llmProvider
+            .ClassifyPkiIntentAsync(selectedModel, message, cancellationToken)
+            .ConfigureAwait(false);
+
+        _logger.LogInformation(
+            "PKI-классификация завершена. Модель: {Model}, интент: {Intent}, confidence: {Confidence}.",
+            selectedModel,
+            response.Intent,
+            response.Confidence);
 
         return response;
     }

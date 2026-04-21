@@ -16,6 +16,16 @@ public sealed class OllamaChatRequest
     public IReadOnlyCollection<OllamaChatMessageRequest> Messages { get; init; } = [];
 
     /// <summary>
+    /// JSON Schema для структурированного ответа модели.
+    /// </summary>
+    public object? Format { get; init; }
+
+    /// <summary>
+    /// Дополнительные параметры генерации модели.
+    /// </summary>
+    public OllamaChatOptions? Options { get; init; }
+
+    /// <summary>
     /// Отключает потоковый режим для получения цельного ответа.
     /// </summary>
     public bool Stream { get; init; } = false;

@@ -40,7 +40,11 @@ public interface ILLMClient
                     Role = "user",
                     Content = message
                 }
-            ]
+            ],
+            Options = new OllamaChatOptions
+            {
+                Temperature = 0
+            }
         };
 
         return await ChatRawAsync(request, cancellationToken).ConfigureAwait(false);
