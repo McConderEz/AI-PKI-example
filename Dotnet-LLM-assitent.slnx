@@ -2,7 +2,17 @@
   <Folder Name="/Solution Items/">
     <File Path="compose.yaml" />
   </Folder>
-  <Folder Name="/src/">
-    <Project Path="src/Assistant.Web/Assistant.Web.csproj" />
+  <Folder Name="/src/" />
+  <Folder Name="/src/Common/">
+    <Project Path="src/Common/Pki.Messaging.Contracts/Pki.Messaging.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/CA/">
+    <Project Path="src/CA/CertificationAuthority.Web/CertificationAuthority.Web.csproj" />
+  </Folder>
+  <Folder Name="/src/LLM.API/">
+    <Project Path="src/LLM.API/Assistant.Web/Assistant.Web.csproj" />
+  </Folder>
+  <Folder Name="/src/RA/">
+    <Project Path="src/RA/RegistrationAuthority.Web/RegistrationAuthority.Web.csproj" />
   </Folder>
 </Solution>
