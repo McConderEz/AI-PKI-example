@@ -38,12 +38,12 @@ public sealed class CreateCertificateCommandConsumer : IConsumer<CreateCertifica
     public async Task Consume(ConsumeContext<CreateCertificateCommand> context)
     {
         var message = context.Message;
-        var certificate = _certificateService.Issue(new IssueCertificateRequest
+        var certificate = await _certificateService.IssueAsync(new IssueCertificateRequest
         {
             CertRequestId = message.CertRequestId,
             Subject = message.Subject,
             ValidDays = 365
-        });
+        }, context.CancellationToken).ConfigureAwait(false);
 
         await _publishEndpoint.Publish(new CertificateIssuedEvent
         {
@@ -52,7 +52,7 @@ public sealed class CreateCertificateCommandConsumer : IConsumer<CreateCertifica
             SerialNumber = certificate.SerialNumber,
             IssuedAt = certificate.IssuedAt,
             ExpiresAt = certificate.ExpiresAt
-        }).ConfigureAwait(false);
+        }, context.CancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Сертификат {CertificateId} выпущен по заявке {CertRequestId}, событие CertificateIssued опубликовано.",

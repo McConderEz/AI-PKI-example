@@ -11,28 +11,25 @@ public interface IUserService
     /// <summary>
     /// Создает пользователя.
     /// </summary>
-    /// <param name="request">Запрос на создание пользователя.</param>
-    /// <returns>Созданный пользователь.</returns>
-    User Create(CreateUserRequest request);
+    Task<User> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Обновляет существующего пользователя.
+    /// Обновляет пользователя.
     /// </summary>
-    /// <param name="id">Идентификатор пользователя.</param>
-    /// <param name="request">Запрос на обновление.</param>
-    /// <returns>Обновленный пользователь или <c>null</c>, если пользователь не найден.</returns>
-    User? Update(Guid id, UpdateUserRequest request);
+    Task<User?> UpdateAsync(Guid id, UpdateUserRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Удаляет пользователя.
+    /// </summary>
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Получает пользователя по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор пользователя.</param>
-    /// <returns>Пользователь или <c>null</c>, если запись не найдена.</returns>
-    User? GetById(Guid id);
+    Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Возвращает список пользователей.
     /// </summary>
-    /// <returns>Коллекция пользователей.</returns>
-    IReadOnlyCollection<User> GetAll();
+    Task<IReadOnlyCollection<User>> GetAllAsync(CancellationToken cancellationToken = default);
 }

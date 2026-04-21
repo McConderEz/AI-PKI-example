@@ -7,10 +7,10 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["src/Assistant.Web/Assistant.Web.csproj", "src/Assistant.Web/"]
-RUN dotnet restore "src/Assistant.Web/Assistant.Web.csproj"
+COPY ["src/LLM.API/Assistant.Web/Assistant.Web.csproj", "src/LLM.API/Assistant.Web/"]
+RUN dotnet restore "src/LLM.API/Assistant.Web/Assistant.Web.csproj"
 COPY . .
-WORKDIR "/src/src/Assistant.Web"
+WORKDIR "/src/src/LLM.API/Assistant.Web"
 RUN dotnet build "./Assistant.Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish

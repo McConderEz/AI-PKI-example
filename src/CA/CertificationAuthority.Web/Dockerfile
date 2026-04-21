@@ -8,6 +8,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["src/CA/CertificationAuthority.Web/CertificationAuthority.Web.csproj", "src/CA/CertificationAuthority.Web/"]
+COPY ["src/Common/Pki.Messaging.Contracts/Pki.Messaging.Contracts.csproj", "src/Common/Pki.Messaging.Contracts/"]
 RUN dotnet restore "src/CA/CertificationAuthority.Web/CertificationAuthority.Web.csproj"
 COPY . .
 WORKDIR "/src/src/CA/CertificationAuthority.Web"

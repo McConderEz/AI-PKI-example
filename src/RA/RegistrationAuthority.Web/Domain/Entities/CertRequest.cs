@@ -1,47 +1,54 @@
+using RegistrationAuthority.Web.Domain.Enums;
+
 namespace RegistrationAuthority.Web.Domain.Entities;
 
 /// <summary>
-/// Запрос на выпуск сертификата.
+/// Заявка на выпуск сертификата.
 /// </summary>
-public sealed record CertRequest
+public sealed class CertRequest
 {
     /// <summary>
-    /// Идентификатор запроса.
+    /// Идентификатор заявки.
     /// </summary>
-    public Guid Id { get; init; }
+    public Guid Id { get; set; }
 
     /// <summary>
-    /// Идентификатор пользователя, создавшего запрос.
+    /// Идентификатор пользователя.
     /// </summary>
-    public Guid UserId { get; init; }
+    public Guid UserId { get; set; }
 
     /// <summary>
-    /// Common Name для сертификата.
+    /// Common Name сертификата.
     /// </summary>
-    public string CommonName { get; init; } = string.Empty;
+    public string CommonName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Subject запроса на сертификат.
+    /// Subject сертификата.
     /// </summary>
-    public string Subject { get; init; } = string.Empty;
+    public string Subject { get; set; } = string.Empty;
 
     /// <summary>
-    /// Текущее состояние запроса.
+    /// Статус заявки.
     /// </summary>
-    public string Status { get; init; } = "pending";
+    public CertRequestStatus Status { get; set; } = CertRequestStatus.Pending;
 
     /// <summary>
-    /// Идентификатор выпущенного сертификата, если заявка обработана.
+    /// Время создания заявки.
     /// </summary>
-    public Guid? CertificateId { get; init; }
-
-    /// <summary>
-    /// Время создания запроса.
-    /// </summary>
-    public DateTimeOffset CreatedAt { get; init; }
+    public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
     /// Время последнего обновления заявки.
     /// </summary>
-    public DateTimeOffset UpdatedAt { get; init; }
+    public DateTimeOffset UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Пользователь, создавший заявку.
+    /// </summary>
+    public User? User { get; set; }
+
+    /// <summary>
+    /// Связанный сертификат, если заявка исполнена.
+    /// </summary>
+    public Certificate? Certificate { get; set; }
 }

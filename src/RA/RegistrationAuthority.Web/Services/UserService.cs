@@ -1,70 +1,85 @@
 using RegistrationAuthority.Web.Domain.Entities;
 using RegistrationAuthority.Web.Domain.Requests;
-using RegistrationAuthority.Web.Infrastructure;
+using RegistrationAuthority.Web.Infrastructure.Repositories;
 
 namespace RegistrationAuthority.Web.Services;
 
 /// <summary>
-/// In-memory реализация сервиса пользователей RA.
+/// Сервис пользователей RA на основе EF Core.
 /// </summary>
 public sealed class UserService : IUserService
 {
-    private readonly InMemoryRaStore _store;
+    private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     /// <summary>
     /// Инициализирует сервис пользователей.
     /// </summary>
-    /// <param name="store">In-memory хранилище RA.</param>
-    public UserService(InMemoryRaStore store)
+    public UserService(IUserRepository userRepository, IUnitOfWork unitOfWork)
     {
-        _store = store;
+        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
     }
 
     /// <inheritdoc />
-    public User Create(CreateUserRequest request)
+    public async Task<User> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
         var user = new User
         {
             Id = Guid.NewGuid(),
-            FullName = request.FullName,
-            Email = request.Email,
+            FullName = request.FullName.Trim(),
+            Email = request.Email.Trim().ToLowerInvariant(),
             CreatedAt = now,
             UpdatedAt = now
         };
 
-        _store.Users[user.Id] = user;
+        _userRepository.Add(user);
+        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return user;
     }
 
     /// <inheritdoc />
-    public User? Update(Guid id, UpdateUserRequest request)
+    public async Task<User?> UpdateAsync(Guid id, UpdateUserRequest request, CancellationToken cancellationToken = default)
     {
-        if (!_store.Users.TryGetValue(id, out var existingUser))
+        var user = await _userRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+        if (user is null)
         {
             return null;
         }
 
-        var updatedUser = existingUser with
+        user.FullName = request.FullName.Trim();
+        user.Email = request.Email.Trim().ToLowerInvariant();
+        user.Status = request.Status;
+        user.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return user;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+        if (user is null)
         {
-            FullName = request.FullName,
-            Email = request.Email,
-            UpdatedAt = DateTimeOffset.UtcNow
-        };
+            return false;
+        }
 
-        _store.Users[id] = updatedUser;
-        return updatedUser;
+        _userRepository.Remove(user);
+        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return true;
     }
 
     /// <inheritdoc />
-    public User? GetById(Guid id)
+    public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return _store.Users.TryGetValue(id, out var user) ? user : null;
+        return _userRepository.GetByIdAsync(id, cancellationToken);
     }
 
     /// <inheritdoc />
-    public IReadOnlyCollection<User> GetAll()
+    public Task<IReadOnlyCollection<User>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return _store.Users.Values.OrderBy(x => x.CreatedAt).ToArray();
+        return _userRepository.GetAllAsync(cancellationToken);
     }
 }

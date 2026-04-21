@@ -17,7 +17,6 @@ public sealed class RevRequestsController : ControllerBase
     /// <summary>
     /// Инициализирует контроллер заявок на отзыв сертификатов.
     /// </summary>
-    /// <param name="revRequestService">Сервис заявок на отзыв сертификатов.</param>
     public RevRequestsController(IRevRequestService revRequestService)
     {
         _revRequestService = revRequestService;
@@ -26,61 +25,73 @@ public sealed class RevRequestsController : ControllerBase
     /// <summary>
     /// Создает заявку на отзыв сертификата.
     /// </summary>
-    /// <param name="request">Модель создания заявки.</param>
-    /// <returns>Созданная заявка.</returns>
     [HttpPost]
     [ProducesResponseType(typeof(RevRequest), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public ActionResult<RevRequest> Create([FromBody] CreateRevRequest request)
+    public async Task<ActionResult<RevRequest>> Create([FromBody] CreateRevRequest request, CancellationToken cancellationToken)
     {
-        var createdRequest = _revRequestService.Create(request);
-        if (createdRequest is null)
+        var created = await _revRequestService.CreateAsync(request, cancellationToken).ConfigureAwait(false);
+        if (created is null)
         {
-            return BadRequest($"Пользователь {request.UserId} не найден.");
+            return BadRequest("Пользователь или сертификат не найден.");
         }
 
-        return CreatedAtAction(nameof(GetById), new { id = createdRequest.Id }, createdRequest);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+    }
+
+    /// <summary>
+    /// Обновляет заявку на отзыв сертификата.
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(RevRequest), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<RevRequest>> Update(Guid id, [FromBody] UpdateRevRequest request, CancellationToken cancellationToken)
+    {
+        var updated = await _revRequestService.UpdateAsync(id, request, cancellationToken).ConfigureAwait(false);
+        return updated is null ? NotFound() : Ok(updated);
+    }
+
+    /// <summary>
+    /// Удаляет заявку на отзыв сертификата.
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var deleted = await _revRequestService.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
+        return deleted ? NoContent() : NotFound();
     }
 
     /// <summary>
     /// Получает заявку по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор заявки.</param>
-    /// <returns>Заявка.</returns>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(RevRequest), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<RevRequest> GetById(Guid id)
+    public async Task<ActionResult<RevRequest>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var revRequest = _revRequestService.GetById(id);
-        if (revRequest is null)
-        {
-            return NotFound();
-        }
-
-        return Ok(revRequest);
+        var revRequest = await _revRequestService.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+        return revRequest is null ? NotFound() : Ok(revRequest);
     }
 
     /// <summary>
     /// Возвращает список всех заявок.
     /// </summary>
-    /// <returns>Коллекция заявок.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyCollection<RevRequest>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyCollection<RevRequest>> GetAll()
+    public async Task<ActionResult<IReadOnlyCollection<RevRequest>>> GetAll(CancellationToken cancellationToken)
     {
-        return Ok(_revRequestService.GetAll());
+        return Ok(await _revRequestService.GetAllAsync(cancellationToken).ConfigureAwait(false));
     }
 
     /// <summary>
     /// Возвращает заявки конкретного пользователя.
     /// </summary>
-    /// <param name="userId">Идентификатор пользователя.</param>
-    /// <returns>Коллекция заявок пользователя.</returns>
     [HttpGet("/api/users/{userId:guid}/rev-requests")]
     [ProducesResponseType(typeof(IReadOnlyCollection<RevRequest>), StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyCollection<RevRequest>> GetByUser(Guid userId)
+    public async Task<ActionResult<IReadOnlyCollection<RevRequest>>> GetByUser(Guid userId, CancellationToken cancellationToken)
     {
-        return Ok(_revRequestService.GetByUser(userId));
+        return Ok(await _revRequestService.GetByUserAsync(userId, cancellationToken).ConfigureAwait(false));
     }
 }

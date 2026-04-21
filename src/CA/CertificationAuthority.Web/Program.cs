@@ -1,10 +1,23 @@
 using System.Reflection;
 using CertificationAuthority.Web.Infrastructure.Messaging;
-using CertificationAuthority.Web.Infrastructure;
+using CertificationAuthority.Web.Infrastructure.Persistence;
+using CertificationAuthority.Web.Infrastructure.Repositories;
 using CertificationAuthority.Web.Services;
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, _, loggerConfiguration) =>
+{
+    var seqUrl = context.Configuration["Seq:Url"] ?? "http://localhost:5341";
+    loggerConfiguration
+        .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.Seq(seqUrl);
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -18,8 +31,14 @@ builder.Services.AddSwaggerGen(options =>
     }
 });
 
-builder.Services.AddSingleton<InMemoryCaStore>();
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+                       ?? "Data Source=certification-authority.db";
+builder.Services.AddDbContext<CaDbContext>(options => options.UseSqlite(connectionString));
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
 builder.Services.AddScoped<ICertificateService, CertificateService>();
+
 builder.Services.AddMassTransit(configurator =>
 {
     configurator.SetKebabCaseEndpointNameFormatter();
@@ -43,9 +62,15 @@ builder.Services.AddMassTransit(configurator =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<CaDbContext>();
+    dbContext.Database.EnsureCreated();
+}
+
+app.UseSerilogRequestLogging();
 app.UseSwagger();
 app.UseSwaggerUI();
-
 app.MapControllers();
 
 app.Run();

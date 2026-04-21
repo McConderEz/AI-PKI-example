@@ -11,7 +11,25 @@ public interface ICertificateService
     /// <summary>
     /// Выпускает сертификат.
     /// </summary>
-    /// <param name="request">Запрос на выпуск.</param>
-    /// <returns>Выпущенный сертификат.</returns>
-    Certificate Issue(IssueCertificateRequest request);
+    Task<Certificate> IssueAsync(IssueCertificateRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Обновляет сертификат.
+    /// </summary>
+    Task<Certificate?> UpdateAsync(Guid id, UpdateCertificateRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Удаляет сертификат.
+    /// </summary>
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Получает сертификат по идентификатору.
+    /// </summary>
+    Task<Certificate?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Возвращает список сертификатов.
+    /// </summary>
+    Task<IReadOnlyCollection<Certificate>> GetAllAsync(CancellationToken cancellationToken = default);
 }

@@ -17,11 +17,15 @@ services:
       - rabbitmq
     environment:
       - ASPNETCORE_URLS=http://+:8080
+      - Seq__Url=http://llm-seq:5341
       - RabbitMq__Host=rabbitmq
       - RabbitMq__Username=guest
       - RabbitMq__Password=guest
+      - ConnectionStrings__DefaultConnection=Data Source=/data/registration-authority.db
     ports:
       - "8082:8080"
+    volumes:
+      - ra_data:/data
 
   certificationauthority.web:
     image: certificationauthority.web
@@ -33,11 +37,15 @@ services:
       - rabbitmq
     environment:
       - ASPNETCORE_URLS=http://+:8080
+      - Seq__Url=http://llm-seq:5341
       - RabbitMq__Host=rabbitmq
       - RabbitMq__Username=guest
       - RabbitMq__Password=guest
+      - ConnectionStrings__DefaultConnection=Data Source=/data/certification-authority.db
     ports:
       - "8083:8080"
+    volumes:
+      - ca_data:/data
 
   assistant.web:
     image: assistant.web
@@ -117,3 +125,5 @@ volumes:
   ollama_data:
   open_webui_data:
   seq_data:
+  ra_data:
+  ca_data:

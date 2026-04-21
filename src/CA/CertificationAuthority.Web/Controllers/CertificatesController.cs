@@ -20,8 +20,6 @@ public sealed class CertificatesController : ControllerBase
     /// <summary>
     /// Инициализирует контроллер сертификатов.
     /// </summary>
-    /// <param name="certificateService">Сервис сертификатов.</param>
-    /// <param name="publishEndpoint">Публикатор сообщений в брокер.</param>
     public CertificatesController(ICertificateService certificateService, IPublishEndpoint publishEndpoint)
     {
         _certificateService = certificateService;
@@ -31,13 +29,12 @@ public sealed class CertificatesController : ControllerBase
     /// <summary>
     /// Выпускает сертификат по заявке.
     /// </summary>
-    /// <param name="request">Запрос на выпуск сертификата.</param>
-    /// <returns>Выпущенный сертификат.</returns>
     [HttpPost]
     [ProducesResponseType(typeof(Certificate), StatusCodes.Status201Created)]
-    public async Task<ActionResult<Certificate>> Issue([FromBody] IssueCertificateRequest request)
+    public async Task<ActionResult<Certificate>> Issue([FromBody] IssueCertificateRequest request, CancellationToken cancellationToken)
     {
-        var certificate = _certificateService.Issue(request);
+        var certificate = await _certificateService.IssueAsync(request, cancellationToken).ConfigureAwait(false);
+
         await _publishEndpoint.Publish(new CertificateIssuedEvent
         {
             CertRequestId = certificate.CertRequestId,
@@ -45,8 +42,54 @@ public sealed class CertificatesController : ControllerBase
             SerialNumber = certificate.SerialNumber,
             IssuedAt = certificate.IssuedAt,
             ExpiresAt = certificate.ExpiresAt
-        }).ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
 
-        return CreatedAtAction(nameof(Issue), new { id = certificate.Id }, certificate);
+        return CreatedAtAction(nameof(GetById), new { id = certificate.Id }, certificate);
+    }
+
+    /// <summary>
+    /// Обновляет сертификат.
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(Certificate), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Certificate>> Update(Guid id, [FromBody] UpdateCertificateRequest request, CancellationToken cancellationToken)
+    {
+        var updated = await _certificateService.UpdateAsync(id, request, cancellationToken).ConfigureAwait(false);
+        return updated is null ? NotFound() : Ok(updated);
+    }
+
+    /// <summary>
+    /// Удаляет сертификат.
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var deleted = await _certificateService.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
+        return deleted ? NoContent() : NotFound();
+    }
+
+    /// <summary>
+    /// Получает сертификат по идентификатору.
+    /// </summary>
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(Certificate), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Certificate>> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        var certificate = await _certificateService.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+        return certificate is null ? NotFound() : Ok(certificate);
+    }
+
+    /// <summary>
+    /// Возвращает список сертификатов.
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyCollection<Certificate>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyCollection<Certificate>>> GetAll(CancellationToken cancellationToken)
+    {
+        return Ok(await _certificateService.GetAllAsync(cancellationToken).ConfigureAwait(false));
     }
 }

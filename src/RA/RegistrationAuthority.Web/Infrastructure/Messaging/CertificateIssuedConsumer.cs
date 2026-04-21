@@ -29,7 +29,19 @@ public sealed class CertificateIssuedConsumer : IConsumer<CertificateIssuedEvent
     /// <param name="context">Контекст сообщения.</param>
     public Task Consume(ConsumeContext<CertificateIssuedEvent> context)
     {
-        var updated = _certRequestService.MarkIssued(context.Message.CertRequestId, context.Message.CertificateId);
+        return ConsumeInternalAsync(context);
+    }
+
+    private async Task ConsumeInternalAsync(ConsumeContext<CertificateIssuedEvent> context)
+    {
+        var updated = await _certRequestService.RegisterIssuedCertificateAsync(
+                context.Message.CertRequestId,
+                context.Message.CertificateId,
+                context.Message.SerialNumber,
+                context.Message.IssuedAt,
+                context.Message.ExpiresAt,
+                context.CancellationToken)
+            .ConfigureAwait(false);
 
         if (updated)
         {
@@ -44,7 +56,5 @@ public sealed class CertificateIssuedConsumer : IConsumer<CertificateIssuedEvent
                 "Заявка {CertRequestId} не найдена при обработке события выпуска сертификата.",
                 context.Message.CertRequestId);
         }
-
-        return Task.CompletedTask;
     }
 }

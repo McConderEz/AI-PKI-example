@@ -1,37 +1,54 @@
+using RegistrationAuthority.Web.Domain.Enums;
+
 namespace RegistrationAuthority.Web.Domain.Entities;
 
 /// <summary>
-/// Запрос на отзыв сертификата.
+/// Заявка на отзыв сертификата.
 /// </summary>
-public sealed record RevRequest
+public sealed class RevRequest
 {
     /// <summary>
-    /// Идентификатор запроса.
+    /// Идентификатор заявки.
     /// </summary>
-    public Guid Id { get; init; }
+    public Guid Id { get; set; }
 
     /// <summary>
-    /// Идентификатор пользователя, создавшего запрос.
+    /// Идентификатор пользователя.
     /// </summary>
-    public Guid UserId { get; init; }
+    public Guid UserId { get; set; }
 
     /// <summary>
-    /// Идентификатор сертификата, который требуется отозвать.
+    /// Идентификатор сертификата для отзыва.
     /// </summary>
-    public Guid CertificateId { get; init; }
+    public Guid CertificateId { get; set; }
 
     /// <summary>
-    /// Причина отзыва сертификата.
+    /// Причина отзыва.
     /// </summary>
-    public string Reason { get; init; } = string.Empty;
+    public string Reason { get; set; } = string.Empty;
 
     /// <summary>
-    /// Текущее состояние запроса.
+    /// Статус заявки на отзыв.
     /// </summary>
-    public string Status { get; init; } = "pending";
+    public RevRequestStatus Status { get; set; } = RevRequestStatus.Pending;
 
     /// <summary>
-    /// Время создания запроса.
+    /// Время создания заявки.
     /// </summary>
-    public DateTimeOffset CreatedAt { get; init; }
+    public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>
+    /// Время последнего обновления заявки.
+    /// </summary>
+    public DateTimeOffset UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Пользователь, создавший заявку.
+    /// </summary>
+    public User? User { get; set; }
+
+    /// <summary>
+    /// Сертификат, который требуется отозвать.
+    /// </summary>
+    public Certificate? Certificate { get; set; }
 }

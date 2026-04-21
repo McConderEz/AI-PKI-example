@@ -11,27 +11,30 @@ public interface IRevRequestService
     /// <summary>
     /// Создает заявку на отзыв сертификата.
     /// </summary>
-    /// <param name="request">Запрос на создание заявки.</param>
-    /// <returns>Созданная заявка или <c>null</c>, если пользователь не найден.</returns>
-    RevRequest? Create(CreateRevRequest request);
+    Task<RevRequest?> CreateAsync(CreateRevRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Обновляет заявку на отзыв сертификата.
+    /// </summary>
+    Task<RevRequest?> UpdateAsync(Guid id, UpdateRevRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Удаляет заявку на отзыв.
+    /// </summary>
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Получает заявку по идентификатору.
     /// </summary>
-    /// <param name="id">Идентификатор заявки.</param>
-    /// <returns>Заявка или <c>null</c>, если не найдена.</returns>
-    RevRequest? GetById(Guid id);
+    Task<RevRequest?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Возвращает список всех заявок.
+    /// Возвращает все заявки.
     /// </summary>
-    /// <returns>Коллекция заявок.</returns>
-    IReadOnlyCollection<RevRequest> GetAll();
+    Task<IReadOnlyCollection<RevRequest>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Возвращает заявки конкретного пользователя.
+    /// Возвращает заявки пользователя.
     /// </summary>
-    /// <param name="userId">Идентификатор пользователя.</param>
-    /// <returns>Коллекция заявок пользователя.</returns>
-    IReadOnlyCollection<RevRequest> GetByUser(Guid userId);
+    Task<IReadOnlyCollection<RevRequest>> GetByUserAsync(Guid userId, CancellationToken cancellationToken = default);
 }
